@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>திருக்குறள் உரை தேடி</title>
+  <link rel="stylesheet" href="common.css">
+  <style>
+    body {
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      display: flex;
+    }
+    .container {
+      max-width: 900px;
+      width: 100%;
+      background: var(--surface);
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      padding: 24px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    /* --- New Search Styles --- */
+    .search-container {
+      position: relative;
+      margin-bottom: 24px;
+      text-align: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      z-index: 50;
+    }
+    .search-box {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .search-box input {
+      width: 100%;
+      max-width: 400px;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 1rem;
+      outline: none;
+    }
+    .search-box input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+    }
+    .search-box button {
+      padding: 10px 20px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+    .search-box button:hover {
+      background: var(--primary-hover);
+    }
+    .semantic-link {
+      font-size: 0.9rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .semantic-link:hover {
+      text-decoration: underline;
+    }
+
+    .concordance-link {
+      font-size: 0.9rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .concordance-link:hover {
+      text-decoration: underline;
+    }
+
+    .search-results {
+      display: none;
+      position: absolute;
+      top: 60px; /* Positions right below the input */
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 500px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      max-height: 350px;
+      overflow-y: auto;
+      text-align: left;
+    }
+    .search-result-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .search-result-item:last-child {
+      border-bottom: none;
+    }
+    .search-result-item:hover {
+      background: var(--background);
+    }
+    .search-result-kural {
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 4px;
+      font-size: 0.9rem;
+    }
+    .search-result-text {
+      font-size: 0.95rem;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    /* -------------------------- */
+
+    .nav-controls {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    select {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+      background: var(--surface);
+      cursor: pointer;
+      min-width: 150px;
+    }
+    .kural-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .kural-btn {
+      padding: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .kural-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .kural-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    .kural-btn::after {
+      content: attr(data-preview);
+      position: absolute;
+      bottom: 110%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: pre-line;
+      width: max-content;
+      max-width: 250px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 10;
+      text-align: center;
+      line-height: 1.4;
+    }
+    .kural-btn:hover::after {
+      opacity: 1;
+    }
+    .viewer {
+      background: var(--background);
+      border-radius: 8px;
+      padding: 24px;
+      margin-top: 16px;
+    }
+    .kural-text {
+      font-size: 1.2rem;
+      font-weight: 600;
+      line-height: 1.8;
+      text-align: center;
+      margin-bottom: 24px;
+      color: var(--primary);
+      white-space: pre-wrap; /* This makes the \n in JSON render as actual line breaks! */
+    }
+    .urai-section {
+      margin-bottom: 16px;
+      padding: 16px;
+      background: var(--surface);
+      border-radius: 8px;
+      border-left: 4px solid var(--primary);
+    }
+    .urai-title {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+      font-weight: bold;
+    }
+    .urai-summary {
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+    .urai-detail {
+      color: var(--text-muted);
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+    .pagination {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 24px;
+    }
+    .page-btn {
+      padding: 8px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .page-btn:hover:not(:disabled) {
+      background: var(--primary);
+      color: white;
+    }
+    .page-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>திருக்குறள் உரை தேடி</h1>
+  </div>
+
+  <!-- Search Section -->
+  <div class="search-container">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search words in Tamil or English...">
+      <button onclick="executeSearch()">தேடு</button>
+    </div>
+    <a href="search.html" class="semantic-link" target="TirukkuralSemanticSearchPage">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      </svg>
+      திருக்குறள் பொருண்மைத் தேடலுக்கு (Semantic Search) ...
+    </a>
+    <br>
+    <a href="concordance.html"  class="concordance-link"
+        target="TirukkualConcordancePage">திருக்குறள் தொடரடைவு (concordance)</a>
+
+    <!-- Dropdown for Results -->
+    <div id="searchResults" class="search-results"></div>
+  </div>
+
+  <div class="nav-controls">
+    <select id="paalSelect"></select>
+    <select id="iyalSelect"></select>
+    <select id="adhikaramSelect"></select>
+  </div>
+
+  <div class="kural-grid" id="kuralGrid"></div>
+
+  <div class="viewer" id="viewerSection" style="display: none;">
+    <div class="pagination">
+      <button class="page-btn" id="prevBtn">« முந்தைய (Prev)</button>
+      <span id="kuralNumberDisplay" style="font-weight: bold; align-self: center;"></span>
+      <button class="page-btn" id="nextBtn">அடுத்த (Next) »</button>
+    </div>
+
+    <div class="kural-text" id="kuralText"></div>
+    
+    <div class="urai-section">
+      <div class="urai-title">பரிமேலழகர் உரை (Parimelazhagar)</div>
+      <div class="urai-summary" id="parimelazhagarSummary"></div>
+      <div class="urai-detail" id="parimelazhagarDetail"></div>
+    </div>
+
+    <div class="urai-section">
+      <div class="urai-title">G.U. Pope Translation</div>
+      <div class="urai-summary" id="popeTranslation"></div>
+      <div class="urai-detail" id="popeExplanation" style="font-style: italic;"></div>
+    </div>
+  </div>
+</div>
+
+<script src="mobile_detect.js"></script>
+<script src="concordance_utils.js"></script>
+<script src="json_load.js"></script>
+
+<script>
+  window.name = "TirukkuralMainPage";
+
+  let kuralsData = [];
+  let hierarchy = {};
+  let currentAdhikaramKurals = [];
+  let currentIndex = 0;
+
+  async function loadData() {
+    try {
+      // Assuming your loadJSON() returns the parsed JSON array or null
+      const [kData, pData, uData] = await Promise.all([
+        loadJSON('tirukkural.json').catch(() => null),
+        loadJSON('tirukkural_pope_translation.json').catch(() => null),
+        loadJSON('tirukkural_parmelazhagar_urai.json').catch(() => null)
+      ]);
+
+      // Check if the data arrays actually exist
+      if (!kData || !pData || !uData) {
+        throw new Error("One or more JSONs not found in IndexedDB/Storage");
+      }
+
+      // We don't need kRes.json() anymore, we map the data directly!
+      kuralsData = kData.map(k => {
+        const pope = pData.find(p => p.global_number === k.global_number) || {};
+        const urai = uData.find(u => u.global_number === k.global_number) || {};
+        return {
+          ...k,
+          p_summary: urai.summary || "உரை கிடைக்கவில்லை",
+          p_detail: urai.explanation || "",
+          pope_trans: pope.translation || "Translation not available",
+          pope_exp: pope.explanation || ""
+        };
+      }); 
+    } catch (e) {
+      console.error(e); // Added this so you can see exact errors in the console!
+      console.warn("Failed to load JSONs from IndexedDB.");
+      return;
+    }
+    
+    buildHierarchy();
+    initDropdowns();
+    checkUrlForKural();
+  }
+
+  function buildHierarchy() {
+    hierarchy = {};
+    kuralsData.forEach(k => {
+      if (!hierarchy[k.paal]) hierarchy[k.paal] = {};
+      if (!hierarchy[k.paal][k.iyal]) hierarchy[k.paal][k.iyal] = new Set();
+      hierarchy[k.paal][k.iyal].add(k.adhikaram);
+    });
+  }
+
+  const pSel = document.getElementById('paalSelect');
+  const iSel = document.getElementById('iyalSelect');
+  const aSel = document.getElementById('adhikaramSelect');
+  const grid = document.getElementById('kuralGrid');
+  const viewer = document.getElementById('viewerSection');
+
+  function initDropdowns() {
+    populateSelect(pSel, Object.keys(hierarchy));
+    pSel.onchange = () => {
+      populateSelect(iSel, Object.keys(hierarchy[pSel.value]));
+      iSel.onchange();
+    };
+    iSel.onchange = () => {
+      populateSelect(aSel, Array.from(hierarchy[pSel.value][iSel.value]));
+      aSel.onchange();
+    };
+    aSel.onchange = () => loadAdhikaram(true);
+    
+    if(pSel.options.length > 0) pSel.onchange();
+  }
+
+  function populateSelect(el, items) {
+    el.innerHTML = items.map(item => `<option value="${item}">${item}</option>`).join('');
+  }
+
+  function loadAdhikaram(autoShowFirst = true) {
+    const selectedPaal = pSel.value;
+    const selectedIyal = iSel.value;
+    const selectedAdhikaram = aSel.value;
+    
+    currentAdhikaramKurals = kuralsData.filter(k => 
+      k.paal === selectedPaal &&
+      k.iyal === selectedIyal &&
+      k.adhikaram === selectedAdhikaram
+    );
+    
+    grid.innerHTML = currentAdhikaramKurals.map((k, i) => `
+      <button class="kural-btn" onclick="showKural(${i})" data-preview="${k.text}">
+        ${k.global_number}
+      </button>
+    `).join('');
+    
+    if(currentAdhikaramKurals.length > 0 && autoShowFirst !== false) {
+      showKural(0);
+    }
+  }
+
+  function showKural(index) {
+    currentIndex = index;
+    const kural = currentAdhikaramKurals[index];
+    
+    document.querySelectorAll('.kural-btn').forEach((btn, i) => {
+      btn.classList.toggle('active', i === index);
+    });
+
+    viewer.style.display = 'block';
+    document.getElementById('kuralNumberDisplay').textContent = `குறள் ${kural.global_number}`;
+    document.getElementById('kuralText').textContent = kural.text; // concordanceLinkedNurpa(isMobile, kural.text);
+    
+    document.getElementById('parimelazhagarSummary').textContent = kural.p_summary;
+    document.getElementById('parimelazhagarDetail').textContent = kural.p_detail;
+    
+    document.getElementById('popeTranslation').textContent = kural.pope_trans;
+    document.getElementById('popeExplanation').textContent = kural.pope_exp;
+
+    document.getElementById('prevBtn').disabled = kural.global_number === 1;
+    document.getElementById('nextBtn').disabled = kural.global_number === 1330;
+  }
+
+  // --- Core Navigation ---
+  document.getElementById('prevBtn').onclick = () => navigateGlobal(-1);
+  document.getElementById('nextBtn').onclick = () => navigateGlobal(1);
+
+  function navigateGlobal(step) {
+    if(!currentAdhikaramKurals.length) return;
+    const currentGlobalNum = currentAdhikaramKurals[currentIndex].global_number;
+    jumpToKuralGlobal(currentGlobalNum + step);
+  }
+
+  function jumpToKuralGlobal(targetGlobalNum) {
+    const targetKural = kuralsData.find(k => k.global_number === targetGlobalNum);
+    if (!targetKural) return;
+
+    let adhikaramChanged = false;
+
+    if (pSel.value !== targetKural.paal) {
+      pSel.value = targetKural.paal;
+      populateSelect(iSel, Object.keys(hierarchy[pSel.value]));
+      adhikaramChanged = true;
+    }
+    
+    if (iSel.value !== targetKural.iyal || adhikaramChanged) {
+      iSel.value = targetKural.iyal;
+      populateSelect(aSel, Array.from(hierarchy[pSel.value][iSel.value]));
+      adhikaramChanged = true;
+    }
+
+    if (aSel.value !== targetKural.adhikaram) {
+      aSel.value = targetKural.adhikaram;
+      adhikaramChanged = true;
+    }
+
+    if (adhikaramChanged) {
+      loadAdhikaram(false); 
+    }
+
+    const localIndex = currentAdhikaramKurals.findIndex(k => k.global_number === targetGlobalNum);
+    if (localIndex !== -1) {
+      showKural(localIndex);
+    }
+  }
+
+  function checkUrlForKural() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const kuralNo = parseInt(urlParams.get('kural_no'));
+    if (kuralNo && kuralNo >= 1 && kuralNo <= 1330) {
+      jumpToKuralGlobal(kuralNo);
+    }
+  }
+
+  // --- Search Logic ---
+  const searchInput = document.getElementById('searchInput');
+  const searchResults = document.getElementById('searchResults');
+
+  function executeSearch() {
+    const query = searchInput.value.trim().toLowerCase();
+    
+    if (!query) {
+      searchResults.style.display = 'none';
+      return;
+    }
+
+    // Search across text, summary, details, and english translation
+    // Limit to 40 results to keep the UI snappy
+    const matches = kuralsData.filter(k => 
+      (k.text && k.text.toLowerCase().includes(query)) ||
+      (k.p_summary && k.p_summary.toLowerCase().includes(query)) ||
+      (k.p_detail && k.p_detail.toLowerCase().includes(query)) ||
+      (k.pope_trans && k.pope_trans.toLowerCase().includes(query))
+    ).slice(0, 40);
+
+    if (matches.length === 0) {
+      searchResults.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--text-muted);">No matches found.</div>';
+    } else {
+      searchResults.innerHTML = matches.map(m => `
+        <div class="search-result-item" onclick="selectSearchResult(${m.global_number})">
+          <div class="search-result-kural">குறள் ${m.global_number} &mdash; ${m.adhikaram}</div>
+          <div class="search-result-text">${m.text.replace(/\n/g, ' - ')}</div>
+        </div>
+      `).join('');
+    }
+    
+    searchResults.style.display = 'block';
+  }
+
+  function selectSearchResult(kuralNo) {
+    searchResults.style.display = 'none';
+    searchInput.value = ''; // Optional: clear the search box
+    jumpToKuralGlobal(kuralNo);
+  }
+
+  // Allow pressing Enter to search
+  searchInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      executeSearch();
+    }
+  });
+
+  // Hide dropdown if clicked outside
+  document.addEventListener('click', function(e) {
+    const container = document.querySelector('.search-container');
+    if (!container.contains(e.target)) {
+      searchResults.style.display = 'none';
+    }
+  });
+
+  // Boot
+  loadData();
+</script>
+</body>
+</html>
