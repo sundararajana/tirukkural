@@ -345,6 +345,7 @@
 
     <div class="urai-section">
       <div class="urai-title">G.U. Pope Translation</div>
+      <div class="urai-adikaram-title" id="popeAdikaramTitle"></div>
       <div class="urai-summary" id="popeTranslation"></div>
       <div class="urai-detail" id="popeExplanation" style="font-style: italic;"></div>
     </div>
@@ -402,6 +403,7 @@
           ...k,
           p_summary: urai.summary || "உரை கிடைக்கவில்லை",
           p_detail: urai.explanation || "",
+          pope_adhikaram: pope.adhikaram || "",
           pope_trans: pope.translation || "Translation not available",
           pope_exp: pope.explanation || ""
         };
@@ -488,6 +490,7 @@
     document.getElementById('parimelazhagarSummary').textContent = kural.p_summary;
     document.getElementById('parimelazhagarDetail').textContent = kural.p_detail;
 
+    document.getElementById('popeAdikaramTitle').textContent = kural.pope_adhikaram;
     document.getElementById('popeTranslation').textContent = kural.pope_trans;
     document.getElementById('popeExplanation').textContent = kural.pope_exp;
 
