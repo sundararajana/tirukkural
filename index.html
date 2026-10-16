@@ -24,7 +24,7 @@
       text-align: center;
       margin-bottom: 20px;
     }
-    
+
     /* --- New Search Styles --- */
     .search-container {
       position: relative;
@@ -261,6 +261,35 @@
       opacity: 0.5;
       cursor: not-allowed;
     }
+
+    .external-links-section {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px dashed var(--border);
+      text-align: center;
+    }
+    .external-links {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .external-links a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      padding: 8px 16px;
+      border: 1px solid var(--primary);
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .external-links a:hover {
+      background: var(--primary);
+      color: white;
+    }
+
   </style>
 </head>
 <body>
@@ -307,7 +336,7 @@
     </div>
 
     <div class="kural-text" id="kuralText"></div>
-    
+
     <div class="urai-section">
       <div class="urai-title">பரிமேலழகர் உரை</div>
       <div class="urai-summary" id="parimelazhagarSummary"></div>
@@ -318,6 +347,14 @@
       <div class="urai-title">G.U. Pope Translation</div>
       <div class="urai-summary" id="popeTranslation"></div>
       <div class="urai-detail" id="popeExplanation" style="font-style: italic;"></div>
+    </div>
+
+    <div class="external-links-section">
+      <div class="urai-title">பிற உரைகள் ..</div>
+      <div class="external-links">
+        <a id="linkTamilVu" href="#" target="TamilvuKuralPage" rel="noopener noreferrer">தமிழ் இணையக் கல்விக்கழக உரை ↗</a>
+        <a id="linkKuraloviyam" href="#" target="KuraloviyamKuralPage" rel="noopener noreferrer">குறளோவியம் தளத்தில் உரை ↗</a>
+      </div>
     </div>
   </div>
 </div>
@@ -359,13 +396,13 @@
           pope_trans: pope.translation || "Translation not available",
           pope_exp: pope.explanation || ""
         };
-      }); 
+      });
     } catch (e) {
       console.error(e); // Added this so you can see exact errors in the console!
       console.warn("Failed to load JSONs from IndexedDB.");
       return;
     }
-    
+
     buildHierarchy();
     initDropdowns();
     checkUrlForKural();
@@ -397,7 +434,7 @@
       aSel.onchange();
     };
     aSel.onchange = () => loadAdhikaram(true);
-    
+
     if(pSel.options.length > 0) pSel.onchange();
   }
 
@@ -409,19 +446,19 @@
     const selectedPaal = pSel.value;
     const selectedIyal = iSel.value;
     const selectedAdhikaram = aSel.value;
-    
-    currentAdhikaramKurals = kuralsData.filter(k => 
+
+    currentAdhikaramKurals = kuralsData.filter(k =>
       k.paal === selectedPaal &&
       k.iyal === selectedIyal &&
       k.adhikaram === selectedAdhikaram
     );
-    
+
     grid.innerHTML = currentAdhikaramKurals.map((k, i) => `
       <button class="kural-btn" onclick="showKural(${i})" data-preview="${k.text}">
         ${k.global_number}
       </button>
     `).join('');
-    
+
     if(currentAdhikaramKurals.length > 0 && autoShowFirst !== false) {
       showKural(0);
     }
@@ -430,7 +467,7 @@
   function showKural(index) {
     currentIndex = index;
     const kural = currentAdhikaramKurals[index];
-    
+
     document.querySelectorAll('.kural-btn').forEach((btn, i) => {
       btn.classList.toggle('active', i === index);
     });
@@ -438,15 +475,19 @@
     viewer.style.display = 'block';
     document.getElementById('kuralNumberDisplay').textContent = `குறள் ${kural.global_number}`;
     document.getElementById('kuralText').textContent = kural.text; // concordanceLinkedNurpa(isMobile, kural.text);
-    
+
     document.getElementById('parimelazhagarSummary').textContent = kural.p_summary;
     document.getElementById('parimelazhagarDetail').textContent = kural.p_detail;
-    
+
     document.getElementById('popeTranslation').textContent = kural.pope_trans;
     document.getElementById('popeExplanation').textContent = kural.pope_exp;
 
     document.getElementById('prevBtn').disabled = kural.global_number === 1;
     document.getElementById('nextBtn').disabled = kural.global_number === 1330;
+
+    // Update external links dynamically
+    document.getElementById('linkTamilVu').href = `https://www.tamilvu.org/slet/l2100/l2100uri.jsp?song_no=${kural.global_number}&book_id=31&head_id=26`;
+    document.getElementById('linkKuraloviyam').href = `https://kuraloviyam.com/kural/${kural.global_number}/`;
   }
 
   // --- Core Navigation ---
@@ -470,7 +511,7 @@
       populateSelect(iSel, Object.keys(hierarchy[pSel.value]));
       adhikaramChanged = true;
     }
-    
+
     if (iSel.value !== targetKural.iyal || adhikaramChanged) {
       iSel.value = targetKural.iyal;
       populateSelect(aSel, Array.from(hierarchy[pSel.value][iSel.value]));
@@ -483,7 +524,7 @@
     }
 
     if (adhikaramChanged) {
-      loadAdhikaram(false); 
+      loadAdhikaram(false);
     }
 
     const localIndex = currentAdhikaramKurals.findIndex(k => k.global_number === targetGlobalNum);
@@ -506,7 +547,7 @@
 
   function executeSearch() {
     const query = searchInput.value.trim().toLowerCase();
-    
+
     if (!query) {
       searchResults.style.display = 'none';
       return;
@@ -514,7 +555,7 @@
 
     // Search across text, summary, details, and english translation
     // Limit to 40 results to keep the UI snappy
-    const matches = kuralsData.filter(k => 
+    const matches = kuralsData.filter(k =>
       (k.text && k.text.toLowerCase().includes(query)) ||
       (k.p_summary && k.p_summary.toLowerCase().includes(query)) ||
       (k.p_detail && k.p_detail.toLowerCase().includes(query)) ||
@@ -531,7 +572,7 @@
         </div>
       `).join('');
     }
-    
+
     searchResults.style.display = 'block';
   }
 
