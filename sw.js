@@ -2,7 +2,7 @@
 
 // update this cache name if site content (js/html/css) changes
 const PROJECT_PREFIX = 'tirukkural-shell';
-const CACHE_NAME = `${PROJECT_PREFIX}-v4`;
+const CACHE_NAME = `${PROJECT_PREFIX}-v6`;
 
 const ASSETS = [
   // html files, directories
@@ -10,6 +10,7 @@ const ASSETS = [
   './concordance.html',
   './index.html',
   './search.html',
+  './acknowledgements.html',
 
   // css files
   './common.css',
