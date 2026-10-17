@@ -5,7 +5,7 @@
     const words = text.split(/\s+/);
 
     // Map each word to an HTML anchor tag pointing to the concordance page
-    return words.map(word => {
+    return words.map((word, index) => {
       // Optional: strip trailing punctuation (like commas, periods, semicolons)
       // if you want the link to target just the clean word lemma/form.
       const cleanWord = word.replace(/^[^\w\u0080-\uFFFF]+|[^\w\u0080-\uFFFF]+$/g, '');
@@ -17,7 +17,6 @@
       const target = isMobile ? "_blank" : "TirukkuralConcordancePage";
 
       return `<a href="concordance.html?word=${encodedWord}"
-        style="color: var(--primary); text-decoration:none"
-        target="${target}" class="concordance-word-link">${word}</a>`;
+        target="${target}" class="concordance-word-link">${word}</a>` + (index == 3 ? "<br>" : "");
     }).join(' ');
   }

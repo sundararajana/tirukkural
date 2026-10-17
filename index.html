@@ -92,6 +92,15 @@
       text-decoration: underline;
     }
 
+    .concordance-word-link {
+      color: var(--primary);
+      text-decoration:none;
+    }
+
+    .concordance-word-link:hover {
+      text-decoration: underline;
+    }
+
     .search-results {
       display: none;
       position: absolute;
@@ -290,6 +299,14 @@
       color: white;
     }
 
+    mark {
+      background-color: #fef08a; /* Soft yellow */
+      color: #1f2937;
+      border-radius: 2px;
+      padding: 0 2px;
+      font-weight: bold;
+    }
+
   </style>
 </head>
 <body>
@@ -353,8 +370,9 @@
     <div class="external-links-section">
       <div class="urai-title">பிற உரைகள் ..</div>
       <div class="external-links">
-        <a id="linkTamilVu" href="#" target="TamilvuKuralPage" rel="noopener noreferrer">தமிழ் இணையக் கல்விக்கழக உரை ↗</a>
-        <a id="linkKuraloviyam" href="#" target="KuraloviyamKuralPage" rel="noopener noreferrer">குறளோவியம் தளத்தில் உரை ↗</a>
+        <a id="linkTamilVu" href="#" target="TamilvuKuralPage" rel="noopener noreferrer">தமிழ் இணையக் கல்விக்கழகம் (tamilvu.org) ↗</a>
+        <a id="linkKuraloviyam" href="#" target="KuraloviyamKuralPage" rel="noopener noreferrer">குறளோவியம் (kuraloviyam.com) ↗</a>
+        <a id="linkTamilcube" href="#" target="TamilcubeKuralPage" rel="noopener noreferrer">TamilCube (tamilcube.com) ↗</a
       </div>
     </div>
 
@@ -486,7 +504,7 @@
 
     viewer.style.display = 'block';
     document.getElementById('kuralNumberDisplay').textContent = `குறள் ${kural.global_number}`;
-    document.getElementById('kuralText').textContent = kural.text; // concordanceLinkedNurpa(isMobile, kural.text);
+    document.getElementById('kuralText').innerHTML = concordanceLinkedNurpa(isMobile, kural.text);
 
     document.getElementById('parimelazhagarSummary').textContent = kural.p_summary;
     document.getElementById('parimelazhagarDetail').textContent = kural.p_detail;
@@ -501,6 +519,7 @@
     // Update external links dynamically
     document.getElementById('linkTamilVu').href = `https://www.tamilvu.org/slet/l2100/l2100uri.jsp?song_no=${kural.global_number}&book_id=31&head_id=26`;
     document.getElementById('linkKuraloviyam').href = `https://kuraloviyam.com/kural/${kural.global_number}/`;
+    document.getElementById('linkTamilcube').href = `https://tamilcube.com/thirukkural-online/kural/${kural.global_number}/`;
   }
 
   // --- Core Navigation ---
@@ -558,34 +577,85 @@
   const searchInput = document.getElementById('searchInput');
   const searchResults = document.getElementById('searchResults');
 
+  // Helper to safely escape special characters in the search query
+  function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  // Helper to extract a snippet of text around the matched word and highlight it
+  function getMatchSnippet(text, query) {
+    if (!text) return null;
+    const lowerText = text.toLowerCase();
+    const index = lowerText.indexOf(query);
+    if (index === -1) return null;
+    
+    // Grab a window of text (30 chars before, 50 chars after) so long urais fit in the dropdown
+    const start = Math.max(0, index - 30);
+    const end = Math.min(text.length, index + query.length + 50);
+    let snippet = text.substring(start, end);
+    
+    if (start > 0) snippet = '...' + snippet;
+    if (end < text.length) snippet = snippet + '...';
+    
+    // Apply the yellow <mark> tag to the exact matched query
+    const regex = new RegExp(`(${escapeRegExp(query)})`, 'gi');
+    return snippet.replace(regex, '<mark>$1</mark>');
+  }
+
   function executeSearch() {
     const query = searchInput.value.trim().toLowerCase();
-
+    
     if (!query) {
       searchResults.style.display = 'none';
       return;
     }
 
-    // Search across text, summary, details, and english translation
-    // Limit to 40 results to keep the UI snappy
-    const matches = kuralsData.filter(k =>
+    // Still search across all fields
+    const matches = kuralsData.filter(k => 
       (k.text && k.text.toLowerCase().includes(query)) ||
       (k.p_summary && k.p_summary.toLowerCase().includes(query)) ||
       (k.p_detail && k.p_detail.toLowerCase().includes(query)) ||
-      (k.pope_trans && k.pope_trans.toLowerCase().includes(query))
+      (k.pope_trans && k.pope_trans.toLowerCase().includes(query)) ||
+      (k.pope_exp && k.pope_exp.toLowerCase().includes(query))
     ).slice(0, 40);
 
     if (matches.length === 0) {
       searchResults.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--text-muted);">No matches found.</div>';
     } else {
-      searchResults.innerHTML = matches.map(m => `
-        <div class="search-result-item" onclick="selectSearchResult(${m.global_number})">
-          <div class="search-result-kural">குறள் ${m.global_number} &mdash; ${m.adhikaram}</div>
-          <div class="search-result-text">${m.text.replace(/\n/g, ' - ')}</div>
-        </div>
-      `).join('');
-    }
+      searchResults.innerHTML = matches.map(m => {
+        // Determine WHICH field actually matched so we can show the user the right context
+        let snippet = getMatchSnippet(m.text.replace(/\n/g, ' - '), query);
+        let context = "";
+        
+        if (!snippet) {
+          snippet = getMatchSnippet(m.p_summary, query);
+          if (snippet) context = "உரை";
+        }
+        if (!snippet) {
+          snippet = getMatchSnippet(m.pope_trans, query);
+          if (snippet) context = "Translation";
+        }
+        if (!snippet) {
+          snippet = getMatchSnippet(m.p_detail, query);
+          if (snippet) context = "விளக்கம்";
+        }
+        if (!snippet) {
+          snippet = getMatchSnippet(m.pope_exp, query);
+          if (snippet) context = "Explanation";
+        }
+        
+        // If a context was found (meaning it wasn't the main Kural text), label it in the dropdown
+        const contextLabel = context ? `<span style="color: var(--text-muted); font-size: 0.8rem; margin-left: 8px;">[in ${context}]</span>` : '';
 
+        return `
+          <div class="search-result-item" onclick="selectSearchResult(${m.global_number})">
+            <div class="search-result-kural">குறள் ${m.global_number} &mdash; ${m.adhikaram} ${contextLabel}</div>
+            <div class="search-result-text">${snippet}</div>
+          </div>
+        `;
+      }).join('');
+    }
+    
     searchResults.style.display = 'block';
   }
 

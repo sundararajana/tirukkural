@@ -58,6 +58,15 @@
       text-decoration: underline;
     }
 
+    .concordance-word-link {
+      color: var(--primary);
+      text-decoration:none;
+    }
+
+    .concordance-word-link:hover {
+      text-decoration: underline;
+    }
+
     .score {
       color: #777;
       font-size: 0.9rem;
@@ -93,6 +102,7 @@
 <script src="mobile_detect.js"></script>
 <script src="concordance_utils.js"></script>
 <script src="json_load.js"></script>
+<script src="kural_data.js"></script>
 
 <script type="module">
   window.name = "TirukkuralSemanticSearchPage";
@@ -182,11 +192,12 @@
         const kuralNo = item.id;
 
         const target = isMobile ? "_blank" : "TirukkuralMainPage";
+        const loc = getKuralLocation(kuralNo);
 
         return `
           <div class="result">
             <a style="color: var(--primary);" href="index.html?kural_no=${encodeURIComponent(kuralNo)}" target="${target}">
-              ${escapeHtml(String(kuralNo))}
+              ${kuralNo} - ${loc.paal} . ${loc.iyal} . ${loc.adhikaram}
             </a>
             <span class="score">Similarity: ${(score).toFixed(2)}</span>
             <div class="text">${concordanceLinkedNurpa(isMobile, item.text)}</div>
