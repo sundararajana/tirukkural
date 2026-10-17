@@ -588,15 +588,15 @@
     const lowerText = text.toLowerCase();
     const index = lowerText.indexOf(query);
     if (index === -1) return null;
-    
+
     // Grab a window of text (30 chars before, 50 chars after) so long urais fit in the dropdown
     const start = Math.max(0, index - 30);
     const end = Math.min(text.length, index + query.length + 50);
     let snippet = text.substring(start, end);
-    
+
     if (start > 0) snippet = '...' + snippet;
     if (end < text.length) snippet = snippet + '...';
-    
+
     // Apply the yellow <mark> tag to the exact matched query
     const regex = new RegExp(`(${escapeRegExp(query)})`, 'gi');
     return snippet.replace(regex, '<mark>$1</mark>');
@@ -604,14 +604,37 @@
 
   function executeSearch() {
     const query = searchInput.value.trim().toLowerCase();
-    
+
     if (!query) {
       searchResults.style.display = 'none';
       return;
     }
 
-    // Still search across all fields
-    const matches = kuralsData.filter(k => 
+    // INTERCEPT EXACT NUMBERS FOR QUICK JUMP
+    // Check if the query is strictly numbers (1 to 1330)
+    if (/^\d+$/.test(query)) {
+      const kuralNum = parseInt(query, 10);
+
+      if (kuralNum >= 1 && kuralNum <= 1330) {
+        // Grab the exact Kural (array index is number - 1)
+        const m = kuralsData[kuralNum - 1];
+
+        searchResults.innerHTML = `
+          <div class="search-result-item" style="border-left: 3px solid var(--primary);" onclick="selectSearchResult(${m.global_number})">
+            <div class="search-result-kural">🎯 குறள் ${m.global_number} &mdash; ${m.adhikaram}</div>
+            <div class="search-result-text" style="color: var(--text-main); font-weight: 500;">
+              ${m.text.replace(/\n/g, ' <br> ')}
+            </div>
+          </div>
+        `;
+        searchResults.style.display = 'block';
+        return; // Exit early! Don't run the text search.
+      }
+    }
+
+    // STANDARD TEXT SEARCH (runs if it wasn't a valid number)
+    // Search across all interesting fields
+    const matches = kuralsData.filter(k =>
       (k.text && k.text.toLowerCase().includes(query)) ||
       (k.p_summary && k.p_summary.toLowerCase().includes(query)) ||
       (k.p_detail && k.p_detail.toLowerCase().includes(query)) ||
@@ -626,7 +649,7 @@
         // Determine WHICH field actually matched so we can show the user the right context
         let snippet = getMatchSnippet(m.text.replace(/\n/g, ' - '), query);
         let context = "";
-        
+
         if (!snippet) {
           snippet = getMatchSnippet(m.p_summary, query);
           if (snippet) context = "உரை";
@@ -643,7 +666,7 @@
           snippet = getMatchSnippet(m.pope_exp, query);
           if (snippet) context = "Explanation";
         }
-        
+
         // If a context was found (meaning it wasn't the main Kural text), label it in the dropdown
         const contextLabel = context ? `<span style="color: var(--text-muted); font-size: 0.8rem; margin-left: 8px;">[in ${context}]</span>` : '';
 
@@ -655,7 +678,7 @@
         `;
       }).join('');
     }
-    
+
     searchResults.style.display = 'block';
   }
 
@@ -669,6 +692,17 @@
   searchInput.addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
       executeSearch();
+    }
+  });
+
+  // Close the search dropdown if the user clicks anywhere outside of it
+  document.addEventListener('click', function(event) {
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+
+    // If the clicked target is NOT the input box and NOT the dropdown itself
+    if (!searchInput.contains(event.target) && !searchResults.contains(event.target)) {
+      searchResults.style.display = 'none';
     }
   });
 
