@@ -354,7 +354,7 @@
     </div>
   </div>
 
-  <div class="nav-controls">
+  <div id="nav-controls-section" class="nav-controls">
     <select id="paalSelect"></select>
     <select id="iyalSelect"></select>
     <select id="adhikaramSelect"></select>
@@ -701,6 +701,11 @@
 
   function selectSearchResult(kuralNumber) {
     jumpToKuralGlobal(kuralNumber);
+    const element = document.getElementById("nav-controls-section");
+    element.scrollIntoView({
+      block: "start",
+      behavior: "smooth"
+    });
   }
 
   // Allow pressing Enter to search
