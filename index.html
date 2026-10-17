@@ -25,47 +25,15 @@
       margin-bottom: 20px;
     }
 
-    /* --- New Search Styles --- */
-    .search-container {
-      position: relative;
-      margin-bottom: 24px;
-      text-align: center;
-      padding-bottom: 20px;
-      border-bottom: 1px solid var(--border);
-      z-index: 50;
-    }
-    .search-box {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .search-box input {
-      width: 100%;
-      max-width: 400px;
-      padding: 10px 14px;
+    #search-results-container {
+      display: none;
+      margin-top: 15px;
+      max-height: 400px;
+      overflow-y: auto;
       border: 1px solid var(--border);
       border-radius: 6px;
-      font-size: 1rem;
-      outline: none;
     }
-    .search-box input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
-    }
-    .search-box button {
-      padding: 10px 20px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background 0.2s;
-    }
-    .search-box button:hover {
-      background: var(--primary-hover);
-    }
+
     .semantic-link {
       font-size: 0.9rem;
       color: var(--primary);
@@ -341,11 +309,14 @@
           target="TirukkualConcordancePage">திருக்குறள் தொடரடைவு (concordance)</a>
     </div>
 
-    <div id="search-results-container" style="display: none; margin-top: 15px; max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px;">
+    <div id="search-results-container">
         <table style="width: 100%; border-collapse: collapse; background: white;">
             <thead style="position: sticky; top: 0; background: #f1f5f9; box-shadow: 0 1px 2px rgba(0,0,0,0.1); z-index: 1;">
                 <tr>
-                    <th style="padding: 10px; text-align: left; width: 25%; border-bottom: 2px solid #cbd5e1;">எண்</th>
+                    <th style="padding: 10px; text-align: left; width: 25%; border-bottom: 2px solid #cbd5e1;">
+                      <button id="close-search-results" onClick = "closeSearchResults()">&times;</button>
+                      எண்
+                    </th>
                     <th style="padding: 10px; text-align: left; border-bottom: 2px solid #cbd5e1;">குறள் / விளக்கம்</th>
                 </tr>
             </thead>
@@ -592,7 +563,6 @@
 
   // --- Search Logic ---
   const searchInput = document.getElementById('searchInput');
-  const searchResults = document.getElementById('searchResults');
 
   // Helper to safely escape special characters in the search query
   function escapeRegExp(string) {
@@ -706,6 +676,11 @@
       block: "start",
       behavior: "smooth"
     });
+  }
+
+  function closeSearchResults() {
+      const resultsContainer = document.getElementById('search-results-container');
+      resultsContainer.style.display = 'none';
   }
 
   // Allow pressing Enter to search
