@@ -633,7 +633,6 @@
     }
 
     // STANDARD TEXT SEARCH (runs if it wasn't a valid number)
-    // Search across all interesting fields
     const matches = kuralsData.filter(k =>
       (k.text && k.text.toLowerCase().includes(query)) ||
       (k.p_summary && k.p_summary.toLowerCase().includes(query)) ||
@@ -681,6 +680,7 @@
 
     searchResults.style.display = 'block';
   }
+
 
   function selectSearchResult(kuralNo) {
     searchResults.style.display = 'none';
