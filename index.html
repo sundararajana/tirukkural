@@ -616,7 +616,7 @@
       const kuralNum = parseInt(query, 10);
 
       if (kuralNum >= 1 && kuralNum <= 1330) {
-        // Grab the exact Kural (array index is number - 1)
+        // Grab the exact Kural
         const m = kuralsData[kuralNum - 1];
 
         searchResults.innerHTML = `
@@ -689,9 +689,16 @@
   }
 
   // Allow pressing Enter to search
-  searchInput.addEventListener('keypress', function(e) {
+  searchInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation();
       executeSearch();
+
+      // This tells the browser to drop focus from the input box,
+      // which instantly hides the mobile virtual keyboard so the user
+      // can actually see the search results you just loaded.
+      searchInput.blur();
     }
   });
 
