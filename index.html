@@ -25,15 +25,6 @@
       margin-bottom: 20px;
     }
 
-    #search-results-container {
-      display: none;
-      margin-top: 15px;
-      max-height: 400px;
-      overflow-y: auto;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-    }
-
     .semantic-link {
       font-size: 0.9rem;
       color: var(--primary);
@@ -69,48 +60,40 @@
       text-decoration: underline;
     }
 
-    .search-results {
-      display: none;
-      position: absolute;
-      top: 60px; /* Positions right below the input */
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100%;
-      max-width: 500px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-      max-height: 350px;
-      overflow-y: auto;
-      text-align: left;
-    }
-    .search-result-item {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .search-result-item:last-child {
-      border-bottom: none;
-    }
-    .search-result-item:hover {
+    #searchSection {
+      margin: 20px 0;
+      padding: 15px;
       background: var(--background);
+      border-radius: 8px;
+      border: 1px solid var(--border);
     }
-    .search-result-kural {
-      font-weight: 600;
-      color: var(--primary);
-      margin-bottom: 4px;
-      font-size: 0.9rem;
+
+    #searchButton {
+      padding: 10px 20px;
+      background: var(--primary);
+      color: white; border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: bold;
     }
-    .search-result-text {
-      font-size: 0.95rem;
-      color: var(--text-main);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+
+    #searchInput {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 1rem;
     }
-    /* -------------------------- */
+
+    #search-results-container {
+      display: none;
+      margin-top: 15px;
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
 
     .nav-controls {
       display: flex;
@@ -285,13 +268,10 @@
   </div>
 
   <!-- Search Section -->
-  <div id="search-section" style="margin: 20px 0; padding: 15px; background: var(--background); border-radius: 8px; border: 1px solid var(--border);">
+  <div id="searchSection">
     <div style="display: flex; gap: 10px;">
-        <input type="text" id="searchInput" placeholder="குறள், உரை, அல்லது எண் தேட... (Search text/number)"
-            style="flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem;">
-        <button onclick="executeSearch()" style="padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: bold;">
-            தேடு
-        </button>
+        <input type="text" id="searchInput" placeholder="குறள், உரை, அல்லது எண் தேட... (Search text/number)">
+        <button onclick="executeSearch()" id="searchButton">தேடு</button>
     </div>
 
     <div style="margin-top: 10px;">
@@ -314,8 +294,7 @@
             <thead style="position: sticky; top: 0; background: #f1f5f9; box-shadow: 0 1px 2px rgba(0,0,0,0.1); z-index: 1;">
                 <tr>
                     <th style="padding: 10px; text-align: left; width: 25%; border-bottom: 2px solid #cbd5e1;">
-                      <button id="close-search-results" onClick = "closeSearchResults()">&times;</button>
-                      எண்
+                      <button id="close-search-results" onClick = "closeSearchResults()">&times;</button> எண்
                     </th>
                     <th style="padding: 10px; text-align: left; border-bottom: 2px solid #cbd5e1;">குறள் / விளக்கம்</th>
                 </tr>
