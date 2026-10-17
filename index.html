@@ -317,24 +317,41 @@
   </div>
 
   <!-- Search Section -->
-  <div class="search-container">
-    <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Search Kural by Tamil or English words or by number ...">
-      <button onclick="executeSearch()">தேடு</button>
+  <div id="search-section" style="margin: 20px 0; padding: 15px; background: var(--background); border-radius: 8px; border: 1px solid var(--border);">
+    <div style="display: flex; gap: 10px;">
+        <input type="text" id="searchInput" placeholder="குறள், உரை, அல்லது எண் தேட... (Search text/number)"
+            style="flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem;">
+        <button onclick="executeSearch()" style="padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: bold;">
+            தேடு
+        </button>
     </div>
-    <a href="search.html" class="semantic-link" target="TirukkuralSemanticSearchPage">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2" stroke-linecap="round"
-        stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-      </svg>
-      திருக்குறள் பொருண்மைத் தேடலுக்கு (Semantic Search) ...
-    </a>
-    <br>
-    <a href="concordance.html"  class="concordance-link"
-        target="TirukkualConcordancePage">திருக்குறள் தொடரடைவு (concordance)</a>
 
-    <!-- Dropdown for Results -->
-    <div id="searchResults" class="search-results"></div>
+    <div style="margin-top: 10px;">
+      <br>
+      <a href="search.html" class="semantic-link" target="TirukkuralSemanticSearchPage">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        திருக்குறள் பொருண்மைத் தேடலுக்கு (Semantic Search) ...
+      </a>
+      <br>
+      <br>
+      <a href="concordance.html"  class="concordance-link"
+          target="TirukkualConcordancePage">திருக்குறள் தொடரடைவு (concordance)</a>
+    </div>
+
+    <div id="search-results-container" style="display: none; margin-top: 15px; max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px;">
+        <table style="width: 100%; border-collapse: collapse; background: white;">
+            <thead style="position: sticky; top: 0; background: #f1f5f9; box-shadow: 0 1px 2px rgba(0,0,0,0.1); z-index: 1;">
+                <tr>
+                    <th style="padding: 10px; text-align: left; width: 25%; border-bottom: 2px solid #cbd5e1;">எண்</th>
+                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #cbd5e1;">குறள் / விளக்கம்</th>
+                </tr>
+            </thead>
+            <tbody id="search-results-body"></tbody>
+        </table>
+    </div>
   </div>
 
   <div class="nav-controls">
@@ -602,122 +619,94 @@
     return snippet.replace(regex, '<mark>$1</mark>');
   }
 
+// Simple Enter-key support for desktop (optional, since the button handles mobile perfectly)
+  document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') executeSearch();
+  });
+
   function executeSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const resultsContainer = document.getElementById('search-results-container');
+    const tbody = document.getElementById('search-results-body');
     const query = searchInput.value.trim().toLowerCase();
 
     if (!query) {
-      searchResults.style.display = 'none';
+      resultsContainer.style.display = 'none';
       return;
     }
 
-    // INTERCEPT EXACT NUMBERS FOR QUICK JUMP
-    // Check if the query is strictly numbers (1 to 1330)
+    // 1. EXACT NUMBER CHECK
     if (/^\d+$/.test(query)) {
       const kuralNum = parseInt(query, 10);
-
       if (kuralNum >= 1 && kuralNum <= 1330) {
-        // Grab the exact Kural
         const m = kuralsData[kuralNum - 1];
 
-        searchResults.innerHTML = `
-          <div class="search-result-item" style="border-left: 3px solid var(--primary);" onclick="selectSearchResult(${m.global_number})">
-            <div class="search-result-kural">🎯 குறள் ${m.global_number} &mdash; ${m.adhikaram}</div>
-            <div class="search-result-text" style="color: var(--text-main); font-weight: 500;">
-              ${m.text.replace(/\n/g, ' <br> ')}
-            </div>
-          </div>
+        tbody.innerHTML = `
+          <tr style="cursor: pointer; background: #f0fdf4; border-bottom: 1px solid #e2e8f0;" onclick="selectSearchResult(${m.global_number})">
+            <td style="padding: 12px; font-weight: bold; color: var(--primary); vertical-align: top;">🎯 ${m.global_number}</td>
+            <td style="padding: 12px; vertical-align: top;">
+              <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 4px;">${m.adhikaram}</div>
+              <div style="color: var(--text-main); font-weight: 500;">${m.text.replace(/\n/g, '<br>')}</div>
+            </td>
+          </tr>
         `;
-        searchResults.style.display = 'block';
-        return; // Exit early! Don't run the text search.
+        resultsContainer.style.display = 'block';
+
+        // Hide keyboard on mobile after successful search
+        searchInput.blur();
+        return;
       }
     }
 
-    // STANDARD TEXT SEARCH (runs if it wasn't a valid number)
+    // 2. STANDARD TEXT SEARCH
     const matches = kuralsData.filter(k =>
       (k.text && k.text.toLowerCase().includes(query)) ||
       (k.p_summary && k.p_summary.toLowerCase().includes(query)) ||
       (k.p_detail && k.p_detail.toLowerCase().includes(query)) ||
       (k.pope_trans && k.pope_trans.toLowerCase().includes(query)) ||
       (k.pope_exp && k.pope_exp.toLowerCase().includes(query))
-    ).slice(0, 40);
+    );
 
     if (matches.length === 0) {
-      searchResults.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--text-muted);">No matches found.</div>';
+      tbody.innerHTML = `<tr><td colspan="2" style="padding: 16px; text-align: center; color: var(--text-muted);">No matches found.</td></tr>`;
     } else {
-      searchResults.innerHTML = matches.map(m => {
-        // Determine WHICH field actually matched so we can show the user the right context
+      // You can show more results in a scrollable table! (e.g., 50 instead of 5)
+      tbody.innerHTML = matches.slice(0, 50).map(m => {
         let snippet = getMatchSnippet(m.text.replace(/\n/g, ' - '), query);
         let context = "";
 
-        if (!snippet) {
-          snippet = getMatchSnippet(m.p_summary, query);
-          if (snippet) context = "உரை";
-        }
-        if (!snippet) {
-          snippet = getMatchSnippet(m.pope_trans, query);
-          if (snippet) context = "Translation";
-        }
-        if (!snippet) {
-          snippet = getMatchSnippet(m.p_detail, query);
-          if (snippet) context = "விளக்கம்";
-        }
-        if (!snippet) {
-          snippet = getMatchSnippet(m.pope_exp, query);
-          if (snippet) context = "Explanation";
-        }
+        if (!snippet) { snippet = getMatchSnippet(m.p_summary, query); if (snippet) context = "உரை"; }
+        if (!snippet) { snippet = getMatchSnippet(m.pope_trans, query); if (snippet) context = "Translation"; }
+        if (!snippet) { snippet = getMatchSnippet(m.p_detail, query); if (snippet) context = "விளக்கம்"; }
+        if (!snippet) { snippet = getMatchSnippet(m.pope_exp, query); if (snippet) context = "Explanation"; }
 
-        // If a context was found (meaning it wasn't the main Kural text), label it in the dropdown
-        const contextLabel = context ? `<span style="color: var(--text-muted); font-size: 0.8rem; margin-left: 8px;">[in ${context}]</span>` : '';
+        const contextLabel = context ? `<div style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 4px;">[in ${context}]</div>` : '';
 
         return `
-          <div class="search-result-item" onclick="selectSearchResult(${m.global_number})">
-            <div class="search-result-kural">குறள் ${m.global_number} &mdash; ${m.adhikaram} ${contextLabel}</div>
-            <div class="search-result-text">${snippet}</div>
-          </div>
+          <tr style="cursor: pointer; border-bottom: 1px solid #e2e8f0;" onclick="selectSearchResult(${m.global_number})" onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor='transparent'">
+            <td style="padding: 12px; font-weight: bold; color: var(--primary); vertical-align: top;">${m.global_number}</td>
+            <td style="padding: 12px; vertical-align: top;">
+              <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 4px;">${m.adhikaram}</div>
+              ${contextLabel}
+              <div style="color: var(--text-main);">${snippet}</div>
+            </td>
+          </tr>
         `;
       }).join('');
     }
 
-    searchResults.style.display = 'block';
+    resultsContainer.style.display = 'block';
+    searchInput.blur(); // Hide mobile keyboard
   }
 
-
-  function selectSearchResult(kuralNo) {
-    searchResults.style.display = 'none';
-    searchInput.value = ''; // Optional: clear the search box
-    jumpToKuralGlobal(kuralNo);
+  function selectSearchResult(kuralNumber) {
+    jumpToKuralGlobal(kuralNumber);
   }
 
   // Allow pressing Enter to search
   searchInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
-      e.preventDefault();
-      e.stopPropagation();
       executeSearch();
-
-      // This tells the browser to drop focus from the input box,
-      // which instantly hides the mobile virtual keyboard so the user
-      // can actually see the search results you just loaded.
-      searchInput.blur();
-    }
-  });
-
-  // Close the search dropdown if the user clicks anywhere outside of it
-  document.addEventListener('click', function(event) {
-    const searchInput = document.getElementById('searchInput');
-    const searchResults = document.getElementById('searchResults');
-
-    // If the clicked target is NOT the input box and NOT the dropdown itself
-    if (!searchInput.contains(event.target) && !searchResults.contains(event.target)) {
-      searchResults.style.display = 'none';
-    }
-  });
-
-  // Hide dropdown if clicked outside
-  document.addEventListener('click', function(e) {
-    const container = document.querySelector('.search-container');
-    if (!container.contains(e.target)) {
-      searchResults.style.display = 'none';
     }
   });
 
