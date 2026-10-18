@@ -384,7 +384,6 @@
         throw new Error("One or more JSONs not found in IndexedDB/Storage");
       }
 
-      // We don't need kRes.json() anymore, we map the data directly!
       kuralsData = kData.map(k => {
         const pope = pData.find(p => p.global_number === k.global_number) || {};
         const urai = uData.find(u => u.global_number === k.global_number) || {};

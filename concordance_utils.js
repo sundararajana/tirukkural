@@ -17,6 +17,7 @@
       const target = isMobile ? "_blank" : "TirukkuralConcordancePage";
 
       return `<a href="concordance.html?word=${encodedWord}"
-        target="${target}" class="concordance-word-link">${word}</a>` + (index == 3 ? "<br>" : "");
+        target="${target}" class="concordance-word-link">${word}</a>` +
+          (index == (words.length - 4) ? "<br>" : "");
     }).join(' ');
   }

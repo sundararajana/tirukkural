@@ -3,7 +3,7 @@ const STORE_NAME = 'json_cache';
 const DB_VERSION = 1;
 
 // Bump this ONLY when your underlying JSON corpus data changes
-const CURRENT_CORPUS_VERSION = 5;
+const CURRENT_CORPUS_VERSION = 7;
 
 // ==========================================
 // Global Service Worker Registration
