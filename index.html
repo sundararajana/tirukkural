@@ -294,7 +294,11 @@
             <thead style="position: sticky; top: 0; background: #f1f5f9; box-shadow: 0 1px 2px rgba(0,0,0,0.1); z-index: 1;">
                 <tr>
                     <th style="padding: 10px; text-align: left; width: 25%; border-bottom: 2px solid #cbd5e1;">
-                      <button id="close-search-results" onClick = "closeSearchResults()">&times;</button> எண்
+                      <a
+                        href="#" id="close-search-results"
+                        onClick = "closeSearchResults(); return false">
+                        &times; எண்
+                      </a>
                     </th>
                     <th style="padding: 10px; text-align: left; border-bottom: 2px solid #cbd5e1;">குறள் / விளக்கம்</th>
                 </tr>
@@ -543,32 +547,54 @@
   // --- Search Logic ---
   const searchInput = document.getElementById('searchInput');
 
-  // Helper to safely escape special characters in the search query
   function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
-  // Helper to extract a snippet of text around the matched word and highlight it
   function getMatchSnippet(text, query) {
     if (!text) return null;
     const lowerText = text.toLowerCase();
     const index = lowerText.indexOf(query);
     if (index === -1) return null;
 
-    // Grab a window of text (30 chars before, 50 chars after) so long urais fit in the dropdown
-    const start = Math.max(0, index - 30);
-    const end = Math.min(text.length, index + query.length + 50);
+    // Calculate raw indices
+    let start = Math.max(0, index - 30);
+    let end = Math.min(text.length, index + query.length + 50);
+
+    // Snap 'start' to the next space to avoid cutting mid-word
+    if (start > 0) {
+      const nextSpace = text.indexOf(' ', start);
+      if (nextSpace !== -1 && nextSpace < index) {
+        start = nextSpace + 1;
+      } else {
+        const lastSpaceBeforeMatch = text.lastIndexOf(' ', index);
+        start = lastSpaceBeforeMatch !== -1 ? lastSpaceBeforeMatch + 1 : 0;
+      }
+    }
+
+    // Snap 'end' backward to the nearest space
+    if (end < text.length) {
+      const prevSpace = text.lastIndexOf(' ', end);
+      if (prevSpace > index + query.length) {
+        end = prevSpace;
+      } else {
+        const firstSpaceAfterMatch = text.indexOf(' ', index + query.length);
+        end = firstSpaceAfterMatch !== -1 ? firstSpaceAfterMatch : text.length;
+      }
+    }
+
     let snippet = text.substring(start, end);
 
     if (start > 0) snippet = '...' + snippet;
     if (end < text.length) snippet = snippet + '...';
 
-    // Apply the yellow <mark> tag to the exact matched query
-    const regex = new RegExp(`(${escapeRegExp(query)})`, 'gi');
+    // Apply the yellow <mark> tag to the match AND any trailing Tamil combining marks
+    // [\u0BBE-\u0BCD\u0BD7] captures ா, ி, ீ, ு, ூ, ெ, ே, ை, ொ, ோ, ௌ, and ் (pulli)
+    const regex = new RegExp(`(${escapeRegExp(query)}[\\u0BBE-\\u0BCD\\u0BD7]*)`, 'gi');
     return snippet.replace(regex, '<mark>$1</mark>');
   }
 
-// Simple Enter-key support for desktop (optional, since the button handles mobile perfectly)
+  // Simple Enter-key support for desktop (optional, since the button handles mobile perfectly)
   document.getElementById('searchInput').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') executeSearch();
   });
@@ -584,7 +610,7 @@
       return;
     }
 
-    // 1. EXACT NUMBER CHECK
+    // Exact Kural number check
     if (/^\d+$/.test(query)) {
       const kuralNum = parseInt(query, 10);
       if (kuralNum >= 1 && kuralNum <= 1330) {
@@ -594,7 +620,7 @@
           <tr style="cursor: pointer; background: #f0fdf4; border-bottom: 1px solid #e2e8f0;" onclick="selectSearchResult(${m.global_number})">
             <td style="padding: 12px; font-weight: bold; color: var(--primary); vertical-align: top;">🎯 ${m.global_number}</td>
             <td style="padding: 12px; vertical-align: top;">
-              <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 4px;">${m.adhikaram}</div>
+              <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 4px;">${m.paal} . ${m.adhikaram}</div>
               <div style="color: var(--text-main); font-weight: 500;">${m.text.replace(/\n/g, '<br>')}</div>
             </td>
           </tr>
@@ -607,7 +633,7 @@
       }
     }
 
-    // 2. STANDARD TEXT SEARCH
+    // Standard text search
     const matches = kuralsData.filter(k =>
       (k.text && k.text.toLowerCase().includes(query)) ||
       (k.p_summary && k.p_summary.toLowerCase().includes(query)) ||
@@ -624,18 +650,21 @@
         let snippet = getMatchSnippet(m.text.replace(/\n/g, ' - '), query);
         let context = "";
 
-        if (!snippet) { snippet = getMatchSnippet(m.p_summary, query); if (snippet) context = "உரை"; }
-        if (!snippet) { snippet = getMatchSnippet(m.pope_trans, query); if (snippet) context = "Translation"; }
-        if (!snippet) { snippet = getMatchSnippet(m.p_detail, query); if (snippet) context = "விளக்கம்"; }
-        if (!snippet) { snippet = getMatchSnippet(m.pope_exp, query); if (snippet) context = "Explanation"; }
+        if (!snippet) { snippet = getMatchSnippet(m.p_summary, query); if (snippet) context = "உரையில்"; }
+        if (!snippet) { snippet = getMatchSnippet(m.pope_trans, query); if (snippet) context = "in translation"; }
+        if (!snippet) { snippet = getMatchSnippet(m.p_detail, query); if (snippet) context = "விளக்கத்தில்"; }
+        if (!snippet) { snippet = getMatchSnippet(m.pope_exp, query); if (snippet) context = "in explanation"; }
 
-        const contextLabel = context ? `<div style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 4px;">[in ${context}]</div>` : '';
+        const contextLabel = context ? `<div style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 4px;">[${context}]</div>` : '';
 
         return `
-          <tr style="cursor: pointer; border-bottom: 1px solid #e2e8f0;" onclick="selectSearchResult(${m.global_number})" onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor='transparent'">
+          <tr style="cursor: pointer; border-bottom: 1px solid #e2e8f0;"
+            onclick="selectSearchResult(${m.global_number})"
+            onmouseover="this.style.backgroundColor='#f8fafc'"
+            onmouseout="this.style.backgroundColor='transparent'">
             <td style="padding: 12px; font-weight: bold; color: var(--primary); vertical-align: top;">${m.global_number}</td>
             <td style="padding: 12px; vertical-align: top;">
-              <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 4px;">${m.adhikaram}</div>
+              <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 4px;">${m.paal} . ${m.adhikaram}</div>
               ${contextLabel}
               <div style="color: var(--text-main);">${snippet}</div>
             </td>
