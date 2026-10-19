@@ -343,8 +343,9 @@
       <div class="external-links">
         <a id="linkTamilVu" href="#" target="TamilvuKuralPage" rel="noopener noreferrer">தமிழ் இணையக் கல்விக்கழகம் (tamilvu.org) ↗</a>
         <a id="linkKuraloviyam" href="#" target="KuraloviyamKuralPage" rel="noopener noreferrer">குறளோவியம் (kuraloviyam.com) ↗</a>
-        <a id="linkTamilcube" href="#" target="TamilcubeKuralPage" rel="noopener noreferrer">TamilCube (tamilcube.com) ↗</a
-      </div>
+        <a id="linkTamilcube" href="#" target="TamilcubeKuralPage" rel="noopener noreferrer">TamilCube (tamilcube.com) ↗</a>
+        <a id="linkThirukkuralNet" href="#" target="ThirukkuralNetPage" rel="noopener noreferrer">thirukkural.net ↗</a>
+        </div>
     </div>
 
     <br>
@@ -490,6 +491,7 @@
     document.getElementById('linkTamilVu').href = `https://www.tamilvu.org/slet/l2100/l2100uri.jsp?song_no=${kural.global_number}&book_id=31&head_id=26`;
     document.getElementById('linkKuraloviyam').href = `https://kuraloviyam.com/kural/${kural.global_number}/`;
     document.getElementById('linkTamilcube').href = `https://tamilcube.com/thirukkural-online/kural/${kural.global_number}/`;
+    document.getElementById('linkThirukkuralNet').href = `https://www.thirukkural.net/ta/kural/kural-${kural.global_number.toString().padStart(4, '0')}.html`;
   }
 
   // --- Core Navigation ---
