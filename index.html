@@ -680,6 +680,7 @@
 
   function selectSearchResult(kuralNumber) {
     jumpToKuralGlobal(kuralNumber);
+    history.pushState(null, '', `?kural_no=${kuralNumber}`);
     const element = document.getElementById("nav-controls-section");
     element.scrollIntoView({
       block: "start",
